@@ -3,7 +3,7 @@
 // Edit WIFI_SSID / WIFI_PASSWORD in secret.h (or override the macros below).
 
 #include <Arduino.h>
-#include <ota.h>
+#include <pico_ota.h>
 
 const char *ssid = "Your_SSID";
 const char *password = "Your_PASSWORD";
