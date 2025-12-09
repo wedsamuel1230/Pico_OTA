@@ -1,6 +1,6 @@
 # PICO_OTA — Arduino OTA helper for Raspberry Pi Pico W
 
-Arduino library that brings over‑the‑air (OTA) updates to the Raspberry Pi Pico W using the Arduino-Pico core. Ships with a ready-to-run example that connects to Wi‑Fi, starts ArduinoOTA, and blinks the onboard LED so you can verify the loop stays responsive.
+> Arduino library that brings over‑the‑air (OTA) updates to the Raspberry Pi Pico W using the Arduino-Pico core. Ships with a ready-to-run example that connects to Wi‑Fi, starts ArduinoOTA, and blinks the onboard LED so you can verify the loop stays responsive.
 
 ## Repository layout
 ```
@@ -13,6 +13,7 @@ Pico_OTA_test/
 │  └─ Pico_OTA_test/
 │    └─ Pico_OTA_test.ino   
 └─ README.md
+```
 
 ## Requirements
 - Board: Raspberry Pi Pico W (Arduino-Pico core by Earle Philhower)
