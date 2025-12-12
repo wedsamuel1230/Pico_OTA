@@ -228,7 +228,10 @@ Pico_OTA/
 ├─ 📂 examples/
 │  └─ 📂 Pico_OTA_test/
 │     ├─ Pico_OTA_test.ino    
-│     └─ secret.h              
+│     └─ secret.h
+│  └─ 📂 Pico_OTA_test_With_Dual_Core/
+│     ├─ Pico_OTA_test_With_Dual_Core.ino    
+│     └─ secret.h                   
 ├─ 📄 README.md                
 └─ 📄 LICENSE                
 ```
