@@ -54,7 +54,7 @@ A simple Arduino library that enables **Over-The-Air (OTA)** updates for Raspber
 | Setting | Value | Why? |
 |---------|-------|------|
 | **Board** | `Tools → Board → Raspberry Pi RP2040 Boards →`<br>`Raspberry Pi Pico W` (or Pico 2 W) | Selects your hardware |
-| **Flash Size** | `Tools → Flash Size →`<br>`2MB (Sketch: 1MB, FS: 1MB)` ✅<br>or `16MB (Sketch: 8MB, FS: 8MB)` ✅ | OTA needs filesystem space to stage updates |
+| **Flash Size** | `Tools → Flash Size →`<br>`2MB (Sketch: 1MB, FS: 1MB)` ✅ | OTA needs filesystem space to stage updates |
 | **Port** | `Tools → Port →`<br>Windows: `COMx` (e.g., COM3)<br>Mac/Linux: `/dev/ttyACM0` or `/dev/cu.usbmodem*` | For USB upload |
 
 > ⚠️ **DO NOT select "2MB (No FS)"** - OTA will fail without filesystem space!
