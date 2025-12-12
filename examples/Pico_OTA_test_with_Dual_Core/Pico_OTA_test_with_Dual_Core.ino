@@ -1,11 +1,17 @@
 /*━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- * Raspberry Pi Pico W - OTA (Over-The-Air) Update Example
+ * Raspberry Pi Pico W - Dual-Core OTA Example
  *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  * 
  * WHAT THIS DOES:
- * 1. Connects to Wi-Fi and enables OTA via initial USB upload
- * 2. After that, you can upload wirelessly (no USB cable needed!)
- * 3. Uncomment LED blink code to test OTA updates visually
+ * • Core 0: Runs your main application code (with optional LED blink)
+ * • Core 1: Handles OTA exclusively - prevents blocking your main app
+ * • OTA runs continuously in background on Core 1 without interfering with Core 0
+ * 
+ * BENEFITS OVER SINGLE-CORE:
+ * ✓ Main application on Core 0 never blocked by OTA operations
+ * ✓ Responsive real-time tasks on Core 0 (sensors, motors, timers, etc.)
+ * ✓ OTA runs independently on Core 1 with dedicated resources
+ * ✓ Better performance and responsiveness overall
  * 
  *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  * ARDUINO IDE SETUP (MUST DO BEFORE UPLOADING):
@@ -32,13 +38,19 @@
  *   • Click Upload - it uploads wirelessly! 🎉
  * 
  *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- * TESTING OTA UPDATES:
+ * TESTING OTA WITH LED BLINK:
  *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  * 
- * 1. Upload this sketch via USB (LED code is commented out)
- * 2. Uncomment the LED lines below (variables and loop code)
+ * 1. Upload this sketch via USB first (LED code is commented out)
+ * 2. After successful upload, UNCOMMENT all LED-related lines below:
+ *    - Line 66-68: LED variables
+ *    - Line 75-77: pinMode and digitalWrite in setup()
+ *    - Line 85-91: LED blink logic in loop() on Core 0
  * 3. Upload again via OTA (wireless) - you'll see the LED start blinking!
- * 4. This proves OTA is working and you can update your code wirelessly
+ * 4. This proves:
+ *    ✓ OTA works (code updated wirelessly)
+ *    ✓ Core 0 main code runs (LED blinks)
+ *    ✓ Core 1 OTA runs independently in background
  * 
  *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  * CONFIGURATION:
@@ -61,36 +73,63 @@
 
 const char *ssid = "Your_SSID"; //change your Wi-Fi name here
 const char *password = "Your_PASSWORD"; //change your Wi-Fi name here
-const char *hostname = "admin"; // optional: set a custom hostname
+const char *hostname = "pico-ota"; // optional: set a custom hostname
 const char *otaPassword = "admin";  // optional: set an OTA password
 
-// Uncomment the lines below to test OTA updates with LED blink indicator
+// ============================================================================
+// CORE 0 APPLICATION CODE (Main application with optional LED blink)
+// ============================================================================
+
+// LED blink indicator (COMMENTED by default - uncomment after first USB upload)
 // const int ledPin = LED_BUILTIN;
 // unsigned long lastBlink = 0;
 // const unsigned long blinkIntervalMs = 500;
 
 void setup() {
   Serial.begin(115200);
+  delay(1000); // Wait for serial connection
   
-  Serial.println("[MAIN] Starting OTA setup");
-  otaSetup(ssid, password, hostname, otaPassword);
-  // Uncomment these lines to enable LED blink (useful for testing OTA updates)
+  Serial.println();
+  Serial.println("[MAIN] Raspberry Pi Pico W Dual-Core OTA Example");
+  Serial.println("[MAIN] Core 0: Application code (this message)");
+  Serial.println("[MAIN] Core 1: OTA server (running independently)");
+  Serial.println();
+  
+  // Uncomment these lines AFTER first USB upload to enable LED blink on Core 0
   // pinMode(ledPin, OUTPUT);
   // digitalWrite(ledPin, LOW);
-
-  // Your setup code here...
 }
 
+void setup1() {
+  // Core 1 setup - runs once when Core 1 starts
+  Serial.println("[OTA] Core 1 OTA server initializing...");
+  otaSetup(ssid, password, hostname, otaPassword);
+  Serial.println("[OTA] Core 1 OTA ready - waiting for uploads");
+}
 void loop() {
-  otaLoop(); // Must call this frequently to handle OTA requests
-  // Uncomment these lines to enable LED blink (useful for testing OTA updates)
+  // Core 0 main application loop - runs independently from Core 1 OTA server
+  // This code never blocks, allowing responsive handling of sensors, timers, etc.
+  // OPTIONAL: Uncomment to test OTA with LED blink (after first USB upload):
   // const unsigned long now = millis();
   // if (now - lastBlink >= blinkIntervalMs) {
   //   lastBlink = now;
   //   digitalWrite(ledPin, !digitalRead(ledPin));
   // }
+  
+  // Add your main application code here:
+  // - Read sensors
+  // - Control motors/actuators
+  // - Process data
+  // All of this runs WITHOUT BLOCKING for OTA updates!
+  // The OTA server on Core 1 handles uploads independently.
+  
+  delay(100); // Adjust as needed for your application
+}
 
-  // Your loop code here...
+void loop1() {
+  // Core 1 OTA server loop - runs continuously on Core 1
+  // Handles all OTA requests independently from Core 0
+  otaLoop();
 }
   
  

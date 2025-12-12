@@ -1,4 +1,2 @@
 .vscode/*
-examples/secret.h
-examples/Pico_OTA_test/secret.h
 ci.json
