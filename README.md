@@ -63,19 +63,20 @@ A simple Arduino library that enables **Over-The-Air (OTA)** updates for Raspber
 
 ### Step 3️⃣: Configure Wi-Fi Credentials
 
-1. Open example: **`File → Examples → PICO_OTA → Pico_OTA_test`**
-2. Edit these lines in the sketch:
+**Both examples have Wi-Fi credentials in `secret.h` (already set up for you!):**
+
+1. Open the example's `secret.h` file:
+   - Single-core: `examples/Pico_OTA_test/secret.h`
+   - Dual-core: `examples/Pico_OTA_test_with_Dual_Core/secret.h`
+2. Edit these lines with your Wi-Fi and OTA settings:
    ```cpp
    const char *ssid = "Your_SSID";        // ← Your Wi-Fi network name
    const char *password = "Your_PASSWORD"; // ← Your Wi-Fi password
-   ```
-3. (Optional) Customize settings:
-   ```cpp
-   const char *hostname = "pico-ota";     // ← Device name (shows in network ports)
-   const char *otaPassword = "admin";      // ← OTA upload password (or set to nullptr)
+   const char *hostname = "pico-ota";      // ← Device name (shows in network ports)
+   const char *otaPassword = "admin";      // ← OTA upload password
    ```
 
-> 💡 **Pro tip:** Create a `secret.h` file for credentials to keep them out of git!
+> 💡 **Why `secret.h`?** This file is in `.gitignore`, so your Wi-Fi credentials stay secure and never get committed to git!
 
 ---
 
@@ -112,26 +113,41 @@ A simple Arduino library that enables **Over-The-Air (OTA)** updates for Raspber
 
 For more demanding applications, use the **dual-core example** to dedicate Core 1 exclusively to OTA while Core 0 runs your main application without blocking:
 
+**Main sketch (`Pico_OTA_test_with_Dual_Core.ino`):**
 ```cpp
-// setup() runs on Core 0
+#include "secret.h"  // Contains: ssid, password, hostname, otaPassword
+                     // Also contains setup1() and loop1() for Core 1 OTA server
+
+// Core 0 setup - YOUR application setup code
 void setup() {
   Serial.begin(115200);
-  // Your setup code
+  // Your setup code here
 }
 
-// setup1() runs on Core 1
-void setup1() {
-  otaSetup(ssid, password, "my-device", "password");
-}
-
-// loop() runs on Core 0 - your main application
+// Core 0 loop - YOUR main application (never blocks for OTA!)
 void loop() {
-  // Your responsive application code here
-  // Never blocks for OTA updates!
+  // Your responsive application code
+  // Sensors, motors, real-time tasks - never blocked by OTA!
   delay(100);
 }
+```
 
-// loop1() runs on Core 1 - OTA server
+**OTA Server in `secret.h` (pre-configured, don't modify):**
+```cpp
+// Wi-Fi credentials (EDIT THESE)
+const char *ssid = "Your_SSID";
+const char *password = "Your_PASSWORD";
+const char *hostname = "pico-ota";
+const char *otaPassword = "admin";
+
+// Core 1 setup - initializes OTA on Core 1 (automatic)
+void setup1() {
+  Serial.println("[OTA] Core 1 OTA server initializing...");
+  otaSetup(ssid, password, hostname, otaPassword);
+  Serial.println("[OTA] Core 1 OTA ready - waiting for uploads");
+}
+
+// Core 1 loop - runs OTA server on Core 1 (automatic)
 void loop1() {
   otaLoop();  // Handles OTA independently
 }
@@ -149,29 +165,27 @@ void loop1() {
 
 ## 🧪 Testing OTA (LED Blink Example)
 
-Want to verify OTA is really working? Here's a simple test:
+Want to verify OTA is really working? Add an LED blink test to your sketch:
 
-1. ✅ Upload the example via USB (LED code is commented out by default)
-2. ✏️ In the sketch, **uncomment** these lines:
+1. ✅ Upload the example via USB first (LED code is commented out by default)
+2. ✏️ In the **main sketch**, uncomment the LED variables at the top:
    ```cpp
-   // Uncomment these lines:
-   const int ledPin = LED_BUILTIN;
-   unsigned long lastBlink = 0;
-   const unsigned long blinkIntervalMs = 500;
-   
-   // ... and in setup():
-   pinMode(ledPin, OUTPUT);
-   digitalWrite(ledPin, LOW);
-   
-   // ... and in loop():
-   const unsigned long now = millis();
-   if (now - lastBlink >= blinkIntervalMs) {
-     lastBlink = now;
-     digitalWrite(ledPin, !digitalRead(ledPin));
-   }
+   // const int ledPin = LED_BUILTIN;
+   // unsigned long lastBlink = 0;
+   // const unsigned long blinkIntervalMs = 500;
    ```
-3. 📡 Upload again via **OTA (wireless port)**
-4. 💡 The LED starts blinking - **OTA works!**
+3. ✏️ In the **loop()** function, uncomment the LED blink logic:
+   ```cpp
+   // const unsigned long now = millis();
+   // if (now - lastBlink >= blinkIntervalMs) {
+   //   lastBlink = now;
+   //   digitalWrite(ledPin, !digitalRead(ledPin));
+   // }
+   ```
+4. 📡 Upload again via **OTA (wireless port)** - do NOT use USB
+5. 💡 The LED starts blinking - **OTA works!**
+
+> 🎯 **Why this works:** You uncommented code that blinks the LED. If you can upload it wirelessly (OTA) and see the LED blink, that proves OTA successfully updated your device!
 
 ---
 

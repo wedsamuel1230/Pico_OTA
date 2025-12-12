@@ -42,12 +42,13 @@
  *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  * 
  * 1. Upload this sketch via USB first (LED code is commented out)
- * 2. After successful upload, UNCOMMENT all LED-related lines below:
- *    - Line 66-68: LED variables
- *    - Line 75-77: pinMode and digitalWrite in setup()
- *    - Line 85-91: LED blink logic in loop() on Core 0
- * 3. Upload again via OTA (wireless) - you'll see the LED start blinking!
- * 4. This proves:
+ * 2. After successful upload, UNCOMMENT LED variables at top of sketch:
+ *    - const int ledPin = LED_BUILTIN;
+ *    - unsigned long lastBlink = 0;
+ *    - const unsigned long blinkIntervalMs = 500;
+ * 3. UNCOMMENT LED blink logic in loop() on Core 0
+ * 4. Upload again via OTA (wireless) - you'll see the LED start blinking!
+ * 5. This proves:
  *    ✓ OTA works (code updated wirelessly)
  *    ✓ Core 0 main code runs (LED blinks)
  *    ✓ Core 1 OTA runs independently in background
@@ -56,34 +57,16 @@
  * CONFIGURATION:
  *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  * 
- * • Edit ssid and password below with your Wi-Fi credentials
- * • Optional: Change hostname and otaPassword for security
- * • Pro tip: Use secret.h file for credentials (keeps them out of git)
+ * Edit Wi-Fi credentials and OTA settings in secret.h:
+ * • ssid = "Your_SSID" - Your Wi-Fi network name
+ * • password = "Your_PASSWORD" - Your Wi-Fi password
+ * • hostname = "pico-ota" - Device name shown in Arduino IDE Network Ports
+ * • otaPassword = "admin" - Optional OTA upload password
  * 
  * For more details, see README.md
  *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━*/
 #include <Arduino.h>
-#include <pico_ota.h>
-
-//#include "secret.h" //uncomment this line to include Wi-Fi credentials from secret.h
-
-// If you use secret.h, define the following variables in that file:
-// const char *ssid = WIFI_SSID;
-// const char *password = WIFI_PASSWORD;
-
-const char *ssid = "Your_SSID"; //change your Wi-Fi name here
-const char *password = "Your_PASSWORD"; //change your Wi-Fi name here
-const char *hostname = "pico-ota"; // optional: set a custom hostname
-const char *otaPassword = "admin";  // optional: set an OTA password
-
-// ============================================================================
-// CORE 0 APPLICATION CODE (Main application with optional LED blink)
-// ============================================================================
-
-// LED blink indicator (COMMENTED by default - uncomment after first USB upload)
-// const int ledPin = LED_BUILTIN;
-// unsigned long lastBlink = 0;
-// const unsigned long blinkIntervalMs = 500;
+#include "secret.h"
 
 void setup() {
   Serial.begin(115200);
@@ -93,19 +76,13 @@ void setup() {
   Serial.println("[MAIN] Raspberry Pi Pico W Dual-Core OTA Example");
   Serial.println("[MAIN] Core 0: Application code (this message)");
   Serial.println("[MAIN] Core 1: OTA server (running independently)");
-  Serial.println();
+
   
   // Uncomment these lines AFTER first USB upload to enable LED blink on Core 0
   // pinMode(ledPin, OUTPUT);
   // digitalWrite(ledPin, LOW);
 }
 
-void setup1() {
-  // Core 1 setup - runs once when Core 1 starts
-  Serial.println("[OTA] Core 1 OTA server initializing...");
-  otaSetup(ssid, password, hostname, otaPassword);
-  Serial.println("[OTA] Core 1 OTA ready - waiting for uploads");
-}
 void loop() {
   // Core 0 main application loop - runs independently from Core 1 OTA server
   // This code never blocks, allowing responsive handling of sensors, timers, etc.
@@ -124,12 +101,6 @@ void loop() {
   // The OTA server on Core 1 handles uploads independently.
   
   delay(100); // Adjust as needed for your application
-}
-
-void loop1() {
-  // Core 1 OTA server loop - runs continuously on Core 1
-  // Handles all OTA requests independently from Core 0
-  otaLoop();
 }
   
  
