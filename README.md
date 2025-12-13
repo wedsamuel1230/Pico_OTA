@@ -217,9 +217,289 @@ void loop() {
 ```
 
 **API Reference (same on both platforms):**
-- `otaSetup(ssid, password, hostname, otaPassword)` - Initialize OTA (call once in `setup()`)
-  - `hostname` and `otaPassword` are optional (pass `nullptr` to skip)
+
+**Basic Setup:**
+- `otaSetup(ssid, password, hostname, otaPassword)` - Initialize OTA (call once in `setup()`, uses default timeout and auto-format)
 - `otaLoop()` - Handle OTA requests (call frequently in `loop()`)
+
+**Configuration (call before otaSetup):**
+- `otaSetWifiTimeout(timeoutMs)` - Set Wi-Fi connection timeout (default: 30000ms)
+- `otaSetFsAutoFormat(enabled)` - Enable/disable filesystem auto-format on Pico W (default: true)
+
+**Callbacks (call before otaSetup):**
+- `otaOnStart(callback)` - Called when OTA update starts
+- `otaOnProgress(callback)` - Called during OTA update with progress (current, total bytes)
+- `otaOnEnd(callback)` - Called when OTA update completes successfully
+- `otaOnError(callback)` - Called when OTA update fails with error code
+
+**Advanced Setup:**
+- `otaSetupWithTimeout(ssid, password, timeoutMs, hostname, otaPassword, allowFsFormat)` - Full control over timeout and FS behavior (returns bool success)
+
+**Status Queries:**
+- `otaIsConnected()` - Returns true if Wi-Fi is connected
+---
+
+## 🎯 Production-Ready Features (v1.3.0+)
+
+For classroom and field deployments, use these reliability features:
+
+### Non-Blocking Wi-Fi with Timeout
+
+**Problem:** Original code blocks forever if Wi-Fi unavailable  
+**Solution:** Configure timeout before calling `otaSetup()`
+
+```cpp
+otaSetWifiTimeout(15000);  // 15 second timeout
+bool success = otaSetupWithTimeout(ssid, password, 15000, hostname, otaPassword, false);
+if (!success) {
+  Serial.println("OTA failed to start - continuing in offline mode");
+  // Your fallback logic here
+}
+```
+
+### OTA Callbacks for User Feedback
+
+**Problem:** No feedback during OTA updates  
+**Solution:** Register callbacks before calling `otaSetup()`
+
+```cpp
+void onOtaStart() {
+  Serial.println("OTA started - do not power off!");
+  digitalWrite(LED_PIN, HIGH);
+}
+
+void onOtaProgress(unsigned int current, unsigned int total) {
+  Serial.printf("Progress: %u%%\n", (current * 100) / total);
+}
+
+void setup() {
+  otaOnStart(onOtaStart);
+  otaOnProgress(onOtaProgress);
+  otaOnEnd([]() { Serial.println("OTA complete!"); });
+  otaOnError([](int err) { Serial.printf("OTA error: %d\n", err); });
+  
+  otaSetup(ssid, password, hostname, otaPassword);
+}
+```
+
+### Filesystem Safety (Pico W)
+
+**Problem:** Auto-format on mount failure causes data loss  
+**Solution:** Disable auto-format for production
+
+```cpp
+otaSetFsAutoFormat(false);  // Prevents accidental data loss
+otaSetup(ssid, password, hostname, otaPassword);
+```
+
+### Status Monitoring
+
+```cpp
+void loop() {
+  if (otaIsConnected() && otaIsReady()) {
+    otaLoop();  // Only handle OTA when ready
+  }
+  
+  // Your application code
+  if (otaIsConnected()) {
+    // Network-dependent features
+  }
+}
+```
+
+**Complete Example:** See `examples/Non_Blocking_OTA/` for production-ready patterns
+
+---
+
+## 🌐 HTTP Pull-Based OTA (v1.4.0+)
+
+Download firmware updates from an HTTP server. Perfect for production deployments where devices pull updates from a central server.
+
+```cpp
+#include <pico_ota.h>
+
+void setup() {
+  otaSetup(ssid, password, hostname, otaPassword);
+}
+
+void loop() {
+  otaLoop();
+  
+  // Check for updates periodically
+  if (shouldCheckUpdate()) {
+    int result = otaUpdateFromUrl("http://your-server.com/firmware.bin", "1.0.0");
+    
+    if (result == OTA_UPDATE_OK) {
+      // Device will reboot automatically
+    } else if (result == OTA_UPDATE_NO_UPDATE) {
+      Serial.println("Already running latest version");
+    }
+  }
+}
+```
+
+**API Functions:**
+- `otaUpdateFromUrl(url)` - Download and install firmware from URL
+- `otaUpdateFromUrl(url, currentVersion)` - With version checking (server can respond 304 Not Modified)
+- `otaUpdateFromHost(host, port, path)` - Download from host:port/path
+- `otaUpdateFromHost(host, port, path, currentVersion)` - With version checking
+
+**Return Codes:**
+| Code | Constant | Meaning |
+|------|----------|---------|
+| 0 | `OTA_UPDATE_OK` | Update successful (device will reboot) |
+| 1 | `OTA_UPDATE_NO_UPDATE` | Already running latest version |
+| -1 | `OTA_UPDATE_FAILED` | Download or install failed |
+| -2 | `OTA_UPDATE_NO_WIFI` | No WiFi connection |
+| -3 | `OTA_UPDATE_HTTP_ERROR` | HTTP request failed |
+
+**Complete Example:** See `examples/HTTP_Pull_OTA/`
+
+---
+
+## 🌍 Web Browser Upload (v1.4.0+)
+
+Start a web server that allows uploading firmware directly from any web browser. Great for non-technical users!
+
+```cpp
+#include <pico_ota.h>
+
+void setup() {
+  otaSetup(ssid, password, hostname, otaPassword);
+  
+  // Optional: Enable authentication
+  otaSetWebCredentials("admin", "secret123");
+  
+  // Start web server on port 80
+  otaStartWebServer(80);
+  
+  Serial.print("Upload firmware at: http://");
+  Serial.print(WiFi.localIP());
+  Serial.println("/update");
+}
+
+void loop() {
+  otaLoop();  // Handles both ArduinoOTA and web server
+}
+```
+
+**Usage:**
+1. Open a web browser
+2. Navigate to `http://<device-ip>/update`
+3. Select your `.bin` firmware file
+4. Click "Update" and wait for completion
+
+**API Functions:**
+- `otaStartWebServer(port)` - Start web server (default port 80)
+- `otaStopWebServer()` - Stop web server
+- `otaSetWebCredentials(username, password)` - Enable HTTP authentication
+- `otaIsWebServerRunning()` - Check if web server is active
+
+**Complete Example:** See `examples/WebBrowser_OTA/`
+
+---
+
+## 📦 GitHub Release Auto-Update (v1.4.0+)
+
+Automatically check GitHub Releases for new firmware versions and update when available. Perfect for open-source projects!
+
+```cpp
+#include <pico_ota.h>
+
+const char* CURRENT_VERSION = "1.0.0";
+
+void setup() {
+  // Configure GitHub repository
+  otaSetGitHubRepo("username", "my-project");
+  otaSetCurrentVersion(CURRENT_VERSION);
+  otaSetGitHubAssetName("*.bin");  // Match any .bin file
+  
+  otaSetup(ssid, password, hostname, otaPassword);
+}
+
+void loop() {
+  otaLoop();
+  
+  // Check for updates (e.g., hourly)
+  if (shouldCheckUpdate()) {
+    char latestVersion[32];
+    int result = otaCheckGitHubUpdate(latestVersion, sizeof(latestVersion));
+    
+    if (result == OTA_UPDATE_OK) {
+      Serial.printf("New version available: %s\n", latestVersion);
+      otaUpdateFromGitHub();  // Download and install
+    }
+  }
+}
+```
+
+**GitHub Setup:**
+1. Create a repository for your project
+2. Create a Release (e.g., tag `v1.1.0`)
+3. Attach your compiled `.bin` firmware file to the release
+4. Configure the repo details in your sketch
+
+**API Functions:**
+- `otaSetGitHubRepo(owner, repo)` - Set GitHub owner/repo (e.g., "username", "my-project")
+- `otaSetCurrentVersion(version)` - Set current firmware version for comparison
+- `otaSetGitHubAssetName(pattern)` - Asset filename pattern (`*.bin`, `firmware-pico.bin`, etc.)
+- `otaCheckGitHubUpdate(latestVersion, maxLen)` - Check for new release
+- `otaUpdateFromGitHub()` - Download and install latest release
+- `otaGetLatestGitHubVersion()` - Get latest version string
+
+**Return Codes:**
+| Code | Constant | Meaning |
+|------|----------|---------|
+| 0 | `OTA_UPDATE_OK` | Update available (or successful) |
+| 1 | `OTA_UPDATE_NO_UPDATE` | Already running latest version |
+| -4 | `OTA_UPDATE_PARSE_ERROR` | Failed to parse GitHub API response |
+| -5 | `OTA_UPDATE_NO_ASSET` | No matching firmware asset in release |
+
+**Complete Example:** See `examples/GitHub_OTA/`
+
+---
+
+## 🔄 WiFi Auto-Reconnect (v1.4.0+)
+
+Automatically reconnect to WiFi if the connection drops. Essential for reliable IoT deployments.
+
+```cpp
+#include <pico_ota.h>
+
+void onWifiLost() {
+  Serial.println("WiFi disconnected!");
+  // Maybe blink an LED or pause network-dependent tasks
+}
+
+void onWifiRestored() {
+  Serial.println("WiFi reconnected!");
+  // Resume normal operation
+}
+
+void setup() {
+  // Enable auto-reconnect
+  otaSetAutoReconnect(true);
+  otaSetReconnectInterval(30000);    // Try every 30 seconds
+  otaSetMaxReconnectAttempts(10);    // Give up after 10 attempts (0 = infinite)
+  
+  // Optional: Get notified of connection changes
+  otaOnWifiDisconnect(onWifiLost);
+  otaOnWifiReconnect(onWifiRestored);
+  
+  otaSetup(ssid, password, hostname, otaPassword);
+}
+
+void loop() {
+  otaLoop();  // Handles auto-reconnect automatically
+}
+```
+
+**API Functions:**
+- `otaSetAutoReconnect(enabled)` - Enable/disable auto-reconnect
+- `otaSetReconnectInterval(ms)` - Time between reconnect attempts (default: 30000ms)
+- `otaSetMaxReconnectAttempts(count)` - Max attempts before giving up (0 = infinite)
+- `otaOnWifiDisconnect(callback)` - Called when WiFi connection is lost
+- `otaOnWifiReconnect(callback)` - Called when WiFi is restored
 
 ---
 
@@ -228,6 +508,8 @@ void loop() {
 | Problem | Solution |
 |---------|----------|
 | ❌ `ERR: No Filesystem` (Pico W) | Re-select Flash Size with FS partition (e.g., "2MB Sketch + 1MB FS") and re-upload via USB |
+| ❌ Device hangs at "Connecting WiFi..." | Use `otaSetWifiTimeout(15000)` and `otaSetupWithTimeout()` for graceful timeout |
+| ❌ Filesystem data lost after OTA | Call `otaSetFsAutoFormat(false)` before `otaSetup()` to prevent auto-format |
 
 ### ESP32 note and example reference
 
@@ -255,14 +537,26 @@ Pico_OTA/
 │  ├─ pico_ota.h              
 │  └─ pico_ota.cpp            
 ├─ 📂 examples/
-│  └─ 📂 Pico_OTA_test/
+│  ├─ 📂 Pico_OTA_test/              (Basic single-core example)
 │  │  ├─ Pico_OTA_test.ino    
 │  │  └─ secret.h
-│  ├─ 📂 Pico_OTA_test_with_Dual_Core/
+│  ├─ 📂 Pico_OTA_test_with_Dual_Core/  (Dual-core for RP2040)
 │  │  ├─ Pico_OTA_test_with_Dual_Core.ino    
-│  │  └─ secret.h                  
-│  └─ 📂 ESP32_OTA_test/
-│     ├─ ESP32_OTA_test.ino
+│  │  └─ secret.h
+│  ├─ 📂 ESP32_OTA_test/             (ESP32 example)
+│  │  ├─ ESP32_OTA_test.ino
+│  │  └─ secret.h
+│  ├─ 📂 Non_Blocking_OTA/           (Production-ready patterns)
+│  │  ├─ Non_Blocking_OTA.ino
+│  │  └─ secret.h
+│  ├─ 📂 HTTP_Pull_OTA/              (Pull firmware from server)
+│  │  ├─ HTTP_Pull_OTA.ino
+│  │  └─ secret.h
+│  ├─ 📂 WebBrowser_OTA/             (Browser-based upload)
+│  │  ├─ WebBrowser_OTA.ino
+│  │  └─ secret.h
+│  └─ 📂 GitHub_OTA/                 (GitHub release auto-update)
+│     ├─ GitHub_OTA.ino
 │     └─ secret.h
 ├─ 📄 README.md                
 └─ 📄 LICENSE                
