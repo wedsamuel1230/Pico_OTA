@@ -1,8 +1,9 @@
-# 🚀 PICO_OTA — Wireless Arduino Updates for Raspberry Pi Pico W
+# 🚀 PICO_OTA — Wireless Arduino Updates for Raspberry Pi Pico W (ESP32 optional)
 
 <div align="center">
 
-**Upload code wirelessly to your Raspberry Pi Pico W - no USB cable needed!**
+**Upload code wirelessly to your Raspberry Pi Pico W — no USB cable needed!**
+ESP32 support is available using the same API, but Pico W remains the primary focus.
 
 [![Arduino](https://img.shields.io/badge/Arduino-Compatible-00979D?style=flat&logo=arduino)](https://www.arduino.cc/)
 [![Platform](https://img.shields.io/badge/Platform-RP2040-C51A4A?style=flat)](https://www.raspberrypi.com/documentation/microcontrollers/rp2040.html)
@@ -14,7 +15,7 @@
 
 ## 📖 What is This?
 
-A simple Arduino library that enables **Over-The-Air (OTA)** updates for Raspberry Pi Pico W using the Arduino-Pico core.
+A simple Arduino library that enables **Over-The-Air (OTA)** updates for **Raspberry Pi Pico W** (Arduino-Pico core). Optional ESP32 support uses the same API.
 
 **How it works:**
 1. 📡 Upload your sketch once via USB - it connects to Wi-Fi and starts OTA server
@@ -27,7 +28,7 @@ A simple Arduino library that enables **Over-The-Air (OTA)** updates for Raspber
 
 | Requirement | Details |
 |------------|---------|
-| 🎛️ **Board** | Raspberry Pi Pico W or Pico 2 W |
+| 🎛️ **Board** | Raspberry Pi Pico W / Pico 2 W (primary), ESP32 (optional) |
 | 💻 **Software** | Arduino IDE 1.8.x / 2.x + [Arduino-Pico core](https://github.com/earlephilhower/arduino-pico) |
 | 💾 **Flash Config** | A partition with LittleFS filesystem (e.g., 2MB Sketch + 1MB FS) |
 | 📶 **Network** | Device and computer on the same Wi-Fi network |
@@ -49,15 +50,17 @@ A simple Arduino library that enables **Over-The-Air (OTA)** updates for Raspber
 
 ---
 
-### Step 2️⃣: Configure Board Settings ⚠️ CRITICAL
+### Step 2️⃣: Configure Board Settings ⚠️ CRITICAL (Pico W focus)
 
 | Setting | Value | Why? |
 |---------|-------|------|
-| **Board** | `Tools → Board → Raspberry Pi RP2040 Boards →`<br>`Raspberry Pi Pico W` (or Pico 2 W) | Selects your hardware |
-| **Flash Size** | `Tools → Flash Size →`<br>`2MB (Sketch: 1MB, FS: 1MB)` ✅ | OTA needs filesystem space to stage updates |
+| **Board (Pico W)** | `Tools → Board → Raspberry Pi RP2040 Boards →`<br>`Raspberry Pi Pico W` (or Pico 2 W) | Selects your hardware |
+| **Flash Size (Pico W)** | `Tools → Flash Size →`<br>`2MB (Sketch: 1MB, FS: 1MB)` ✅ | OTA needs LittleFS space to stage updates |
+| **Board (ESP32, optional)** | `Tools → Board → ESP32 Arduino → your ESP32 board` | ESP32 support uses the same API |
+| **Flash Size (ESP32, optional)** | Default is fine | ESP32 OTA does not require a filesystem partition |
 | **Port** | `Tools → Port →`<br>Windows: `COMx` (e.g., COM3)<br>Mac/Linux: `/dev/ttyACM0` or `/dev/cu.usbmodem*` | For USB upload |
 
-> ⚠️ **DO NOT select "2MB (No FS)"** - OTA will fail without filesystem space!
+> ⚠️ **Pico W:** DO NOT select "2MB (No FS)" — OTA will fail without filesystem space!
 
 ---
 
@@ -189,7 +192,7 @@ Want to verify OTA is really working? Add an LED blink test to your sketch:
 
 ---
 
-## 🛠️ Using in Your Own Projects
+## 🛠️ Using in Your Own Projects (Pico W first, ESP32 optional)
 
 ```cpp
 #include <pico_ota.h>
@@ -213,7 +216,7 @@ void loop() {
 }
 ```
 
-**API Reference:**
+**API Reference (same on both platforms):**
 - `otaSetup(ssid, password, hostname, otaPassword)` - Initialize OTA (call once in `setup()`)
   - `hostname` and `otaPassword` are optional (pass `nullptr` to skip)
 - `otaLoop()` - Handle OTA requests (call frequently in `loop()`)
@@ -224,7 +227,19 @@ void loop() {
 
 | Problem | Solution |
 |---------|----------|
-| ❌ `ERR: No Filesystem` | Re-select Flash Size with FS partition (e.g., "2MB Sketch + 1MB FS") and re-upload via USB |
+| ❌ `ERR: No Filesystem` (Pico W) | Re-select Flash Size with FS partition (e.g., "2MB Sketch + 1MB FS") and re-upload via USB |
+
+### ESP32 note and example reference
+
+ESP32 users can use the same API (`otaSetup`/`otaLoop`) and start from the minimal example at:
+
+- `examples/ESP32_OTA_test/ESP32_OTA_test.ino`
+- `examples/ESP32_OTA_test/secret.h`
+
+The example defaults to GPIO 2 for LED feedback (common on many ESP32 dev boards). Adjust the pin if your board differs.
+
+| Problem | Solution |
+|---------|----------|
 | ❌ Device doesn't appear in Network Ports | Check Serial Monitor for IP address, ensure same Wi-Fi network, check firewall settings |
 | ❌ OTA upload fails | Verify OTA password matches, check device is powered and connected to Wi-Fi |
 | ❌ LittleFS mount failed | Flash may be corrupt - sketch will auto-format on first run (wait ~30 seconds) |
@@ -243,9 +258,12 @@ Pico_OTA/
 │  └─ 📂 Pico_OTA_test/
 │  │  ├─ Pico_OTA_test.ino    
 │  │  └─ secret.h
-│  └─ 📂 Pico_OTA_test_With_Dual_Core/
-│     ├─ Pico_OTA_test_With_Dual_Core.ino    
-│     └─ secret.h                   
+│  ├─ 📂 Pico_OTA_test_with_Dual_Core/
+│  │  ├─ Pico_OTA_test_with_Dual_Core.ino    
+│  │  └─ secret.h                  
+│  └─ 📂 ESP32_OTA_test/
+│     ├─ ESP32_OTA_test.ino
+│     └─ secret.h
 ├─ 📄 README.md                
 └─ 📄 LICENSE                
 ```

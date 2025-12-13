@@ -2,10 +2,15 @@
 
 #include <Arduino.h>
 #include <ArduinoOTA.h>
-#include <LittleFS.h>
 #include <WiFi.h>
 
+#if defined(ARDUINO_RASPBERRY_PI_PICO_W) || defined(ARDUINO_RASPBERRY_PI_PICO2_W)
+#include <LittleFS.h>
+#endif
+
 namespace {
+
+#if defined(ARDUINO_RASPBERRY_PI_PICO_W) || defined(ARDUINO_RASPBERRY_PI_PICO2_W)
 bool ensureLittleFsMounted() {
   if (LittleFS.begin()) {
     Serial.println("[OTA] LittleFS mounted");
@@ -21,6 +26,7 @@ bool ensureLittleFsMounted() {
   Serial.println("[OTA] ERROR: LittleFS unavailable (check Flash Size partition includes FS)");
   return false;
 }
+#endif
 
 void connectWifi(const char *ssid, const char *password) {
   WiFi.mode(WIFI_STA);
@@ -42,10 +48,13 @@ void otaSetup(const char *ssid,
   Serial.print("[OTA] WiFi connected, IP: ");
   Serial.println(WiFi.localIP());
 
+#if defined(ARDUINO_RASPBERRY_PI_PICO_W) || defined(ARDUINO_RASPBERRY_PI_PICO2_W)
+  // RP2040 Pico W uses LittleFS to stage OTA updates; ensure it is available.
   if (!ensureLittleFsMounted()) {
     Serial.println("[OTA] OTA disabled because filesystem is missing");
     return;
   }
+#endif
 
   if (hostname && *hostname) {
     ArduinoOTA.setHostname(hostname);

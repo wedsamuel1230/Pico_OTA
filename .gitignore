@@ -1,3 +1,6 @@
 .vscode/*
 ci.json
 releasenotes.md
+INSTRUCTABLES_GUIDE.md
+instructables/INSTRUCTABLES_PICO_OTA.html
+instructables/INTRO_SCRIPT_PICO_OTA.txt
