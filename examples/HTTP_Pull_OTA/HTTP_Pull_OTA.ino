@@ -1,18 +1,79 @@
-/**
- * @file HTTP_Pull_OTA.ino
- * @brief HTTP Pull-Based OTA Example for Pico W and ESP32
+/*━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * HTTP Pull-Based OTA Example — Pull Firmware from Web Server
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  * 
- * This example demonstrates how to download and install firmware updates
- * from an HTTP server. The device checks for updates periodically and
- * downloads new firmware when available.
+ * WHAT THIS DOES:
+ * 1. Connects to Wi-Fi and checks for firmware updates periodically
+ * 2. Downloads new firmware from HTTP server when available
+ * 3. Automatically installs update and reboots device
+ * 4. Perfect for production deployments with centralized update server
  * 
- * Compatible with:
- * - Raspberry Pi Pico W / Pico 2 W
- * - ESP32 boards
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * ARDUINO IDE SETUP (MUST DO BEFORE UPLOADING):
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  * 
- * @author Pico_OTA Library
- * @version 1.4.0
- */
+ * FOR PICO W:
+ *   STEP 1: Select Board
+ *     Tools → Board → Raspberry Pi RP2040 Boards → "Raspberry Pi Pico W"
+ *   
+ *   STEP 2: Configure Flash Size ⚠️ CRITICAL!
+ *     Tools → Flash Size → "2MB (Sketch: 1MB, FS: 1MB)"
+ *     ⚠️  DO NOT select "2MB (No FS)" - OTA needs filesystem!
+ *   
+ *   STEP 3: First Upload (USB Required)
+ *     • Connect via USB, select port (COMx on Windows, /dev/ttyACM0 on Linux/Mac)
+ *     • Click Upload, open Serial Monitor (115200 baud), note IP address
+ * 
+ * FOR ESP32:
+ *   STEP 1: Select Board
+ *     Tools → Board → ESP32 Arduino → your ESP32 model
+ *   
+ *   STEP 2: First Upload (USB Required)
+ *     • Connect via USB, select port
+ *     • May need to hold BOOT button during upload
+ *     • Open Serial Monitor (115200 baud), note IP address
+ * 
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * GENERATE .BIN FIRMWARE FILE (REQUIRED FOR HTTP PULL OTA):
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * 
+ * 1. In Arduino IDE: Sketch → Export Compiled Binary (Ctrl+Alt+S)
+ * 2. Find .bin file in sketch folder: <sketch_name>.ino.bin
+ * 3. Upload .bin to your web server (Apache, Nginx, Python http.server, etc.)
+ * 4. Update FIRMWARE_URL below to point to your server
+ * 
+ * Example server setup (Python):
+ *   python -m http.server 8000
+ *   Then set: FIRMWARE_URL = "http://192.168.1.100:8000/firmware.bin"
+ * 
+ * ⚠️  IMPORTANT:
+ *   • Pico W: .bin must be compiled with SAME Flash Size settings (include FS)
+ *   • ESP32: .bin must match your board type (ESP32, ESP32-S2, ESP32-C3, etc.)
+ *   • Test .bin on spare device before production deployment!
+ * 
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * HOW TO USE HTTP PULL OTA:
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * 
+ * 1. Upload this sketch via USB (device connects to WiFi)
+ * 2. Generate .bin file of updated code (Sketch → Export Compiled Binary)
+ * 3. Upload .bin to your web server
+ * 4. Device checks server every 5 minutes (configurable)
+ * 5. When new firmware found, device downloads, installs, and reboots
+ * 6. Check Serial Monitor to verify update success
+ * 
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * CONFIGURATION:
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * 
+ * • Edit secret.h with WiFi credentials (WIFI_SSID, WIFI_PASSWORD)
+ * • Update FIRMWARE_URL below to your server address
+ * • Optional: Adjust CHECK_INTERVAL_MS for update frequency
+ * • Optional: Change CURRENT_VERSION with each release for tracking
+ * 
+ * Compatible with: Pico W, Pico 2 W, ESP32, ESP32-S2, ESP32-C3
+ * For more details, see README.md
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━*/
 
 #include <pico_ota.h>
 #include <WiFi.h>

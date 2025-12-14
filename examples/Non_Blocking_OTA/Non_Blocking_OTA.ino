@@ -1,20 +1,107 @@
-/*
- * Non-Blocking OTA Example
+/*━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * Non-Blocking OTA Example — Production-Ready OTA with Timeouts & Callbacks
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  * 
- * Demonstrates:
- * - Wi-Fi connection timeout (15 seconds)
- * - OTA callbacks for progress feedback
- * - Status functions to check Wi-Fi and OTA readiness
- * - Filesystem auto-format control (disabled for production safety)
- * - Graceful fallback if Wi-Fi connection fails
+ * WHAT THIS DEMONSTRATES:
+ * 1. Non-blocking WiFi connection with configurable timeout (15s)
+ * 2. OTA callbacks for real-time progress feedback during updates
+ * 3. Status functions to monitor WiFi and OTA readiness
+ * 4. Filesystem auto-format control (disabled for production safety)
+ * 5. Graceful fallback if WiFi fails - application continues offline
+ * 6. LED visual status indicators (connecting, ready, failed)
+ * 7. Production-ready patterns: no infinite loops, safe defaults
  * 
- * This example shows how to use the library in production environments
- * where you need:
- * - Non-blocking behavior (no infinite loops)
- * - User feedback during OTA updates
- * - Protection against accidental FS data loss
- * - Ability to continue operation even if OTA fails to start
- */
+ * PERFECT FOR:
+ * • Production environments where blocking is unacceptable
+ * • Devices that must continue operation even if OTA fails
+ * • Applications requiring user feedback during updates
+ * • Deployments needing filesystem data protection
+ * 
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * ARDUINO IDE SETUP (MUST DO BEFORE UPLOADING):
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * 
+ * FOR PICO W:
+ *   STEP 1: Select Board
+ *     Tools → Board → Raspberry Pi RP2040 Boards → "Raspberry Pi Pico W"
+ *   
+ *   STEP 2: Configure Flash Size ⚠️ CRITICAL!
+ *     Tools → Flash Size → "2MB (Sketch: 1MB, FS: 1MB)"
+ *     ⚠️  DO NOT select "2MB (No FS)" - OTA needs filesystem!
+ *   
+ *   STEP 3: First Upload (USB Required)
+ *     • Connect via USB, select port (COMx on Windows, /dev/ttyACM0 on Linux/Mac)
+ *     • Click Upload, open Serial Monitor (115200 baud)
+ *     • Watch LED status and note IP address (if WiFi succeeds)
+ * 
+ * FOR ESP32:
+ *   STEP 1: Select Board
+ *     Tools → Board → ESP32 Arduino → your ESP32 model
+ *   
+ *   STEP 2: First Upload (USB Required)
+ *     • Connect via USB, select port
+ *     • May need to hold BOOT button during upload
+ *     • Open Serial Monitor (115200 baud)
+ *     • Watch LED and note IP address
+ * 
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * LED STATUS PATTERNS (VISUAL FEEDBACK):
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * 
+ * • OFF:              Not initialized yet
+ * • SLOW BLINK (1s):  Connecting to WiFi... (timeout: 15s)
+ * • SOLID ON:         OTA ready! Can accept wireless uploads
+ * • FAST BLINK (250ms): OTA failed (check WiFi credentials in secret.h)
+ * • SOLID ON (update): OTA update in progress (don't power off!)
+ * 
+ * If LED blinks fast, device continues in offline mode - fully functional!
+ * 
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * TESTING NON-BLOCKING OTA:
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * 
+ * TEST 1: Verify Non-Blocking Behavior
+ *   1. Upload via USB with correct WiFi credentials
+ *   2. Watch Serial Monitor - should connect within 15s
+ *   3. LED turns solid = OTA ready
+ *   4. Status messages print every 10s showing "WiFi Connected, OTA Ready"
+ * 
+ * TEST 2: Verify Timeout & Graceful Fallback
+ *   1. Edit secret.h with WRONG WiFi credentials
+ *   2. Upload via USB
+ *   3. Watch LED blink slowly for ~15 seconds (timeout period)
+ *   4. LED switches to fast blink = failed, offline mode
+ *   5. Serial shows "OTA setup failed" but application continues!
+ *   6. Status messages print every 10s showing "WiFi Disconnected, OTA Not Ready"
+ * 
+ * TEST 3: Verify OTA Update with Callbacks
+ *   1. After TEST 1 succeeds, perform wireless upload
+ *   2. Tools → Port → Network Ports → Select device
+ *   3. Click Upload
+ *   4. Watch Serial Monitor for progress: "[APP] OTA Progress: 10%... 20%..."
+ *   5. LED stays solid during update
+ *   6. Device reboots automatically when complete
+ * 
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * CONFIGURATION:
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * 
+ * • Edit secret.h with WiFi credentials (ssid, password, hostname, otaPassword)
+ * • WiFi timeout: 15 seconds (otaSetWifiTimeout in setup())
+ * • FS auto-format: DISABLED for production safety (otaSetFsAutoFormat(false))
+ * • Status update interval: 10 seconds (see loop() function)
+ * • LED pin: Auto-detected (LED_BUILTIN, GPIO 2 for ESP32, GPIO 25 for Pico W)
+ * 
+ * Production Safety Features:
+ *   ✓ No infinite WiFi connection loops (15s timeout)
+ *   ✓ Filesystem won't auto-format if mount fails (protects user data)
+ *   ✓ Application continues if OTA setup fails (offline mode)
+ *   ✓ Real-time progress feedback via callbacks and LED
+ *   ✓ Status monitoring functions (otaIsConnected(), otaIsReady())
+ * 
+ * Compatible with: Pico W, Pico 2 W, ESP32, ESP32-S2, ESP32-C3
+ * For more details, see README.md
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━*/
 
 #include <pico_ota.h>
 #include "secret.h"

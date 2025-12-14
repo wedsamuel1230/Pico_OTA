@@ -1,3 +1,106 @@
+# Release Notes — PICO_OTA v1.4.1
+
+**Date:** December 14, 2025  
+**Type:** Documentation Release
+
+---
+
+## 🎯 Summary
+
+PICO_OTA v1.4.1 is a **documentation-only release** with no API changes. This update provides comprehensive guides for generating `.bin` firmware files and enhances example documentation to match project standards.
+
+---
+
+## ✨ What's New in v1.4.1
+
+### **1. Binary File Generation Guide** 📦
+
+**New comprehensive guide in README.md covering:**
+- Arduino IDE method for Pico W and ESP32 (Export Compiled Binary)
+- Arduino CLI method for automation and CI/CD pipelines
+- Board-specific FQBN configurations
+- Output file locations and naming conventions
+- Usage instructions for HTTP Pull, Web Browser, and GitHub OTA
+- Pro tips and troubleshooting for .bin file deployment
+
+**Why this matters:**
+- v1.4.0 added HTTP Pull, Web Browser, and GitHub OTA features
+- All three features require `.bin` files
+- Many users struggled with "How do I create a .bin file?"
+- This guide makes advanced OTA features accessible to all users
+
+### **2. Enhanced Example Documentation** 📚
+
+**ESP32_OTA_test.ino:**
+- Expanded from 3 lines to 80+ lines of comprehensive documentation
+- Now matches Pico_OTA_test documentation standards
+- Includes:
+  - Board installation instructions
+  - Complete Arduino IDE setup steps
+  - Port selection guide for Windows/Mac/Linux
+  - BOOT button usage for ESP32 uploads
+  - OTA testing workflow with LED blink example
+  - Configuration notes for different ESP32 variants
+
+**All examples now consistently documented** with:
+- Header block explaining purpose and usage
+- Step-by-step setup instructions
+- Testing procedures
+- Configuration guidelines
+
+### **3. Documentation Improvements** 📝
+
+- README.md: Added .bin generation section after "Testing OTA"
+- Improved cross-referencing between examples and features
+- Clarified platform-specific requirements (Pico W vs ESP32)
+- Enhanced troubleshooting section
+
+---
+
+## 🔄 Backward Compatibility
+
+✅ **100% backward compatible** - no code changes, only documentation
+✅ All existing sketches work unchanged
+✅ No library behavior changes
+✅ No API additions or modifications
+
+---
+
+## 📦 Migration from v1.4.0
+
+No code changes required! Simply update your library:
+```bash
+git pull origin main
+```
+
+Or via Arduino Library Manager:
+1. Sketch → Include Library → Manage Libraries
+2. Search "PICO_OTA"
+3. Click Update
+
+---
+
+## 📋 Files Modified
+
+| File | Change |
+|------|--------|
+| `README.md` | Added .bin generation guide section (~60 lines) |
+| `examples/ESP32_OTA_test/ESP32_OTA_test.ino` | Enhanced documentation header (3 → 80+ lines) |
+| `library.properties` | Version bump 1.4.0 → 1.4.1 |
+| `releasenote.md` | Added v1.4.1 release notes |
+
+---
+
+## 🎓 For Users
+
+- **New to .bin files?** Check the new guide in README.md after "Testing OTA" section
+- **Using ESP32?** Review the enhanced ESP32_OTA_test example for complete setup
+- **Production deployment?** Follow the .bin generation CI/CD examples for automation
+
+---
+
+---
+
 # Release Notes — PICO_OTA v1.4.0
 
 **Date:** June 2025  

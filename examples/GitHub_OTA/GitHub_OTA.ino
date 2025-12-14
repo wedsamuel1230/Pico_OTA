@@ -1,23 +1,99 @@
-/**
- * @file GitHub_OTA.ino
- * @brief GitHub Release Auto-Update Example for Pico W and ESP32
+/*━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * GitHub Release Auto-Update OTA Example — Auto-Update from GitHub
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  * 
- * This example demonstrates automatic firmware updates from GitHub Releases.
- * The device checks for new releases and updates itself when a new version
- * is available.
+ * WHAT THIS DOES:
+ * 1. Connects to Wi-Fi and checks GitHub Releases periodically
+ * 2. Compares current firmware version with latest GitHub release
+ * 3. Automatically downloads and installs new release when available
+ * 4. Perfect for open-source projects with distributed deployments
  * 
- * Compatible with:
- * - Raspberry Pi Pico W / Pico 2 W
- * - ESP32 boards
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * ARDUINO IDE SETUP (MUST DO BEFORE UPLOADING):
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  * 
- * Setup:
- * 1. Create a GitHub repository for your project
- * 2. Create a Release with a .bin firmware file attached
- * 3. Configure the repo details below
+ * FOR PICO W:
+ *   STEP 1: Select Board
+ *     Tools → Board → Raspberry Pi RP2040 Boards → "Raspberry Pi Pico W"
+ *   
+ *   STEP 2: Configure Flash Size ⚠️ CRITICAL!
+ *     Tools → Flash Size → "2MB (Sketch: 1MB, FS: 1MB)"
+ *     ⚠️  DO NOT select "2MB (No FS)" - OTA needs filesystem!
+ *   
+ *   STEP 3: First Upload (USB Required)
+ *     • Connect via USB, select port (COMx on Windows, /dev/ttyACM0 on Linux/Mac)
+ *     • Click Upload, open Serial Monitor (115200 baud), note IP address
  * 
- * @author Pico_OTA Library
- * @version 1.4.0
- */
+ * FOR ESP32:
+ *   STEP 1: Select Board
+ *     Tools → Board → ESP32 Arduino → your ESP32 model
+ *   
+ *   STEP 2: First Upload (USB Required)
+ *     • Connect via USB, select port
+ *     • May need to hold BOOT button during upload
+ *     • Open Serial Monitor (115200 baud), note IP address
+ * 
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * GENERATE .BIN FIRMWARE & SETUP GITHUB RELEASE:
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * 
+ * STEP 1: Generate .bin Firmware File
+ *   • In Arduino IDE: Sketch → Export Compiled Binary (Ctrl+Alt+S)
+ *   • Find .bin file in sketch folder: <sketch_name>.ino.bin
+ *   • Rename for clarity: firmware-pico-v1.1.0.bin or firmware-esp32-v1.1.0.bin
+ * 
+ * STEP 2: Create GitHub Repository (if not already done)
+ *   • Create new repo on GitHub or use existing project
+ *   • Push your Arduino sketch code to the repository
+ * 
+ * STEP 3: Create GitHub Release
+ *   • Go to your repo → Releases → "Create a new release"
+ *   • Tag version: v1.1.0 (use semantic versioning)
+ *   • Release title: "Firmware v1.1.0" (descriptive title)
+ *   • Attach your .bin file to the release (drag & drop or click to upload)
+ *   • Publish release
+ * 
+ * STEP 4: Configure This Sketch
+ *   • Update GITHUB_OWNER and GITHUB_REPO below
+ *   • Update CURRENT_VERSION to match your release (e.g., "1.0.0")
+ *   • Optional: Set ASSET_PATTERN to filter firmware files
+ * 
+ * ⚠️  IMPORTANT:
+ *   • Pico W: .bin must be compiled with SAME Flash Size settings (include FS)
+ *   • ESP32: .bin must match your board type (ESP32, ESP32-S2, ESP32-C3, etc.)
+ *   • Use consistent naming: firmware-pico.bin or firmware-esp32.bin
+ *   • Test .bin on spare device before publishing release!
+ * 
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * HOW TO USE GITHUB RELEASE OTA:
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * 
+ * 1. Upload this sketch via USB (device connects to WiFi)
+ * 2. Device checks GitHub every hour (configurable)
+ * 3. When new release detected, device automatically downloads and installs
+ * 4. Device reboots with new firmware
+ * 5. Check Serial Monitor to verify update
+ * 
+ * Workflow for releasing updates:
+ *   1. Update CURRENT_VERSION in sketch to new version (e.g., "1.1.0")
+ *   2. Generate .bin file (Sketch → Export Compiled Binary)
+ *   3. Create GitHub Release with new version tag (e.g., v1.1.0)
+ *   4. Attach .bin file to release
+ *   5. All deployed devices auto-update within 1 hour
+ * 
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * CONFIGURATION:
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * 
+ * • Edit secret.h with WiFi credentials (WIFI_SSID, WIFI_PASSWORD)
+ * • Update GITHUB_OWNER and GITHUB_REPO below (your GitHub username/repo)
+ * • Update CURRENT_VERSION with each release
+ * • Optional: Set ASSET_PATTERN to filter firmware files (*.bin matches all)
+ * • Optional: Adjust CHECK_INTERVAL_MS for update check frequency
+ * 
+ * Compatible with: Pico W, Pico 2 W, ESP32, ESP32-S2, ESP32-C3
+ * For more details, see README.md
+ *━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━*/
 
 #include <pico_ota.h>
 #include <WiFi.h>
