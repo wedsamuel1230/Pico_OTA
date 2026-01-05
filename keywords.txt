@@ -1,0 +1,49 @@
+###########################################
+# Syntax Coloring Map For PICO_OTA
+###########################################
+
+###########################################
+# Datatypes (KEYWORD1)
+###########################################
+
+OtaUpdateResult	KEYWORD1
+
+###########################################
+# Methods and Functions (KEYWORD2)
+###########################################
+
+otaSetup	KEYWORD2
+otaLoop	KEYWORD2
+otaSetWifiTimeout	KEYWORD2
+otaSetFsAutoFormat	KEYWORD2
+otaSetAutoReconnect	KEYWORD2
+otaSetReconnectInterval	KEYWORD2
+otaSetMaxReconnectAttempts	KEYWORD2
+otaOnWifiDisconnect	KEYWORD2
+otaOnWifiReconnect	KEYWORD2
+otaOnStart	KEYWORD2
+otaOnProgress	KEYWORD2
+otaOnEnd	KEYWORD2
+otaOnError	KEYWORD2
+otaOnAuthFail	KEYWORD2
+otaGetHostname	KEYWORD2
+otaGetLocalIP	KEYWORD2
+otaUpdateFromUrl	KEYWORD2
+otaUpdateFromGitHub	KEYWORD2
+otaWebServerStart	KEYWORD2
+otaWebServerHandle	KEYWORD2
+otaWebServerStop	KEYWORD2
+otaNonBlockingSetup	KEYWORD2
+otaNonBlockingCheck	KEYWORD2
+
+###########################################
+# Constants (LITERAL1)
+###########################################
+
+OTA_UPDATE_OK	LITERAL1
+OTA_UPDATE_NO_UPDATE	LITERAL1
+OTA_UPDATE_FAILED	LITERAL1
+OTA_UPDATE_NO_WIFI	LITERAL1
+OTA_UPDATE_HTTP_ERROR	LITERAL1
+OTA_UPDATE_PARSE_ERROR	LITERAL1
+OTA_UPDATE_NO_ASSET	LITERAL1

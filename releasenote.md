@@ -1,3 +1,74 @@
+# Release Notes — PICO_OTA v1.4.2
+
+**Date:** January 5, 2026  
+**Type:** Metadata Release
+
+---
+
+## 🎯 Summary
+
+PICO_OTA v1.4.2 is a **metadata-only release** with no API or code changes. This update refreshes copyright metadata to 2026 and updates the copyright holder attribution.
+
+---
+
+## ✨ What's New in v1.4.2
+
+### **1. Copyright Metadata Update** 📝
+
+**Updated copyright information across all source files:**
+- LICENSE: Copyright year updated to 2026
+- src/pico_ota.h: SPDX header updated to 2026
+- src/pico_ota.cpp: SPDX header updated to 2026
+- Copyright holder: Samuel F.
+
+**Why this matters:**
+- Maintains legal accuracy for current year
+- Ensures proper attribution in all distributions
+- Keeps library metadata current for Arduino Library Manager
+
+---
+
+## 🔄 Backward Compatibility
+
+✅ **100% backward compatible** - no code changes, only metadata  
+✅ All existing sketches work unchanged  
+✅ No library behavior changes  
+✅ No API additions or modifications  
+
+---
+
+## 📦 Migration from v1.4.1
+
+No code changes required! Simply update your library:
+```bash
+git pull origin main
+```
+
+Or via Arduino Library Manager:
+1. Sketch → Include Library → Manage Libraries
+2. Search "PICO_OTA"
+3. Click Update
+
+---
+
+## 📋 Files Modified
+
+| File | Change |
+|------|--------|
+| `LICENSE` | Copyright year 2025 → 2026, holder updated |
+| `src/pico_ota.h` | SPDX header copyright updated to 2026 |
+| `src/pico_ota.cpp` | SPDX header copyright updated to 2026 |
+| `library.properties` | Version bump 1.4.1 → 1.4.2 |
+| `releasenote.md` | Added v1.4.2 release notes |
+
+---
+
+## 🎓 For Users
+
+This release requires no action on your part. All functionality remains identical to v1.4.1.
+
+---
+
 # Release Notes — PICO_OTA v1.4.1
 
 **Date:** December 14, 2025  

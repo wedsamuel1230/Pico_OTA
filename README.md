@@ -652,6 +652,14 @@ MIT License - See [LICENSE](LICENSE) for details.
 
 ---
 
+## License
+
+This library is released under the [MIT License](LICENSE).
+
+> **Note:** This library depends on the [ArduinoOTA](https://github.com/JAndrassy/ArduinoOTA/blob/master/LICENSE) library and the [Arduino-Pico core](https://github.com/earlephilhower/arduino-pico/blob/master/LICENSE), both of which are licensed under [LGPL v2.1](https://www.gnu.org/licenses/lgpl-2.1.html). Binaries compiled with this library will be subject to the LGPL terms regarding the combined work.
+
+---
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit issues or pull requests.

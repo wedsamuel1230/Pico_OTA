@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Samuel F.
+
 #pragma once
 
 #include <Arduino.h>
