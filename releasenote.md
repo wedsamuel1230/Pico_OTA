@@ -1,3 +1,29 @@
+# Release Notes — PICO_OTA v1.4.3
+
+**Date:** August 15, 2026
+**Type:** Bug Fix
+
+---
+
+## Summary
+
+PICO_OTA v1.4.3 fixes Raspberry Pi Pico 2 W board detection and adds compile
+coverage for the supported Pico W, Pico 2 W, and ESP32 targets.
+
+## What's New in v1.4.3
+
+- Corrected the Arduino-Pico board macro to `ARDUINO_RASPBERRY_PI_PICO_2W` in
+  both the public board guard and Pico filesystem implementation guards.
+- Updated Pico 2 W setup and binary-generation guidance for its 4 MB flash menu.
+- Added GitHub Actions compilation coverage for all supported target families.
+
+## Backward Compatibility
+
+Existing Pico W and ESP32 sketches keep the same public API. Pico 2 W sketches
+that previously stopped at the unsupported-board guard can now compile.
+
+---
+
 # Release Notes — PICO_OTA v1.4.2
 
 **Date:** January 5, 2026  
@@ -414,4 +440,3 @@ git pull origin main
 ## 🙏 Notes
 
 This is a **feature release** adding ESP32 support while keeping the API consistent and the Pico W workflow intact.
-

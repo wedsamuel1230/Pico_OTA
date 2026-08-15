@@ -12,7 +12,7 @@
 #include <WebServer.h>
 #include <HTTPUpdateServer.h>
 
-#if defined(ARDUINO_RASPBERRY_PI_PICO_W) || defined(ARDUINO_RASPBERRY_PI_PICO2_W)
+#if defined(ARDUINO_RASPBERRY_PI_PICO_W) || defined(ARDUINO_RASPBERRY_PI_PICO_2W)
 #include <LittleFS.h>
 #include <HTTPUpdate.h>
 #elif defined(ARDUINO_ARCH_ESP32)
@@ -23,7 +23,7 @@
 // Static configuration & state
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 static unsigned long g_wifiTimeoutMs = 30000;  // Default: 30s
-static bool g_fsAutoFormat = true;             // Default: true (Pico W only)
+static bool g_fsAutoFormat = true;             // Default: true (Pico W / Pico 2 W)
 static bool g_otaStarted = false;              // Tracks if ArduinoOTA.begin() was called
 
 // WiFi credentials storage for reconnect
@@ -65,7 +65,7 @@ static String g_latestAssetUrl;
 
 namespace {
 
-#if defined(ARDUINO_RASPBERRY_PI_PICO_W) || defined(ARDUINO_RASPBERRY_PI_PICO2_W)
+#if defined(ARDUINO_RASPBERRY_PI_PICO_W) || defined(ARDUINO_RASPBERRY_PI_PICO_2W)
 bool ensureLittleFsMounted() {
   if (LittleFS.begin()) {
     Serial.println("[OTA] LittleFS mounted");
@@ -209,8 +209,8 @@ bool otaSetupWithTimeout(const char *ssid,
   Serial.print("[OTA] WiFi connected, IP: ");
   Serial.println(WiFi.localIP());
 
-#if defined(ARDUINO_RASPBERRY_PI_PICO_W) || defined(ARDUINO_RASPBERRY_PI_PICO2_W)
-  // RP2040 Pico W uses LittleFS to stage OTA updates; ensure it is available.
+#if defined(ARDUINO_RASPBERRY_PI_PICO_W) || defined(ARDUINO_RASPBERRY_PI_PICO_2W)
+  // RP2040 Pico W / Pico 2 W uses LittleFS to stage OTA updates; ensure it is available.
   if (!ensureLittleFsMounted()) {
     Serial.println("[OTA] OTA disabled because filesystem is missing");
     g_fsAutoFormat = originalFsAutoFormat;  // Restore

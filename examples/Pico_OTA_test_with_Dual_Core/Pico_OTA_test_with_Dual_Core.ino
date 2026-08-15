@@ -22,8 +22,9 @@
  *   (or "Raspberry Pi Pico 2 W" if you have that model)
  * 
  * STEP 2: Configure Flash Size ⚠️ CRITICAL!
- *   Tools → Flash Size → "2MB (Sketch: 1MB, FS: 1MB)"
- *   ⚠️  DO NOT select "2MB (No FS)" - OTA needs filesystem space!
+ *   Pico W:   "2MB (Sketch: 1MB, FS: 1MB)"
+ *   Pico 2 W: "4MB (Sketch: 2MB, FS: 2MB)"
+ *   ⚠️  DO NOT select a "No FS" option - OTA needs filesystem space!
  * 
  * STEP 3: First Upload (USB)
  *   • Connect Pico W via USB cable
@@ -104,5 +105,4 @@ void loop() {
 }
   
  
-
 

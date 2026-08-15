@@ -7,13 +7,13 @@
 
 #if defined(ARDUINO_ARCH_ESP32)
 	// Supported board: ESP32 (ESP32 core)
-#elif defined(ARDUINO_RASPBERRY_PI_PICO_W) || defined(ARDUINO_RASPBERRY_PI_PICO2_W)
+#elif defined(ARDUINO_RASPBERRY_PI_PICO_W) || defined(ARDUINO_RASPBERRY_PI_PICO_2W)
 	// Supported board: Raspberry Pi Pico W / Pico 2 W (Arduino-Pico core)
 #else
 	#error "Supported boards: ESP32 and Raspberry Pi Pico W/Pico 2 W (Wi‑Fi)."
 #endif
 
-// OTA helper API (ESP32 and RP2040 Pico W)
+// OTA helper API (ESP32 and RP2040 Pico W / Pico 2 W)
 // - Call otaSetup(...) once during startup (after Serial.begin if you want logs).
 // - Call otaLoop() frequently (e.g., every loop iteration) to keep OTA alive.
 // - Prefer to keep real Wi-Fi credentials out of source control (e.g., secrets.h in .gitignore).
@@ -35,7 +35,7 @@ enum OtaUpdateResult {
 // Configuration (call before otaSetup)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 void otaSetWifiTimeout(unsigned long timeoutMs);    // Default: 30000ms (30s)
-void otaSetFsAutoFormat(bool enabled);              // Default: true (Pico W only)
+void otaSetFsAutoFormat(bool enabled);              // Default: true (Pico W / Pico 2 W)
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // WiFi Auto-Reconnect (optional, call before otaSetup)

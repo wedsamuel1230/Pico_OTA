@@ -30,7 +30,7 @@ A simple Arduino library that enables **Over-The-Air (OTA)** updates for **Raspb
 |------------|---------|
 | 🎛️ **Board** | Raspberry Pi Pico W / Pico 2 W (primary), ESP32 (optional) |
 | 💻 **Software** | Arduino IDE 1.8.x / 2.x + [Arduino-Pico core](https://github.com/earlephilhower/arduino-pico) |
-| 💾 **Flash Config** | A partition with LittleFS filesystem (e.g., 2MB Sketch + 1MB FS) |
+| 💾 **Flash Config** | A LittleFS partition: Pico W e.g. 2MB (Sketch: 1MB, FS: 1MB); Pico 2 W e.g. 4MB (Sketch: 2MB, FS: 2MB) |
 | 📶 **Network** | Device and computer on the same Wi-Fi network |
 
 ---
@@ -50,17 +50,19 @@ A simple Arduino library that enables **Over-The-Air (OTA)** updates for **Raspb
 
 ---
 
-### Step 2️⃣: Configure Board Settings ⚠️ CRITICAL (Pico W focus)
+### Step 2️⃣: Configure Board Settings ⚠️ CRITICAL (Pico W / Pico 2 W)
 
 | Setting | Value | Why? |
 |---------|-------|------|
-| **Board (Pico W)** | `Tools → Board → Raspberry Pi RP2040 Boards →`<br>`Raspberry Pi Pico W` (or Pico 2 W) | Selects your hardware |
-| **Flash Size (Pico W)** | `Tools → Flash Size →`<br>`2MB (Sketch: 1MB, FS: 1MB)` ✅ | OTA needs LittleFS space to stage updates |
+| **Board (Pico W)** | `Tools → Board → Raspberry Pi RP2040 Boards → Raspberry Pi Pico W` | Selects your hardware |
+| **Flash Size (Pico W)** | `Tools → Flash Size → 2MB (Sketch: 1MB, FS: 1MB)` ✅ | OTA needs LittleFS space to stage updates |
+| **Board (Pico 2 W)** | `Tools → Board → Raspberry Pi RP2040 Boards → Raspberry Pi Pico 2W` | Selects your hardware |
+| **Flash Size (Pico 2 W)** | `Tools → Flash Size → 4MB (Sketch: 2MB, FS: 2MB)` ✅ | Pico 2 W uses the 4 MB flash menu; OTA needs LittleFS space |
 | **Board (ESP32, optional)** | `Tools → Board → ESP32 Arduino → your ESP32 board` | ESP32 support uses the same API |
 | **Flash Size (ESP32, optional)** | Default is fine | ESP32 OTA does not require a filesystem partition |
 | **Port** | `Tools → Port →`<br>Windows: `COMx` (e.g., COM3)<br>Mac/Linux: `/dev/ttyACM0` or `/dev/cu.usbmodem*` | For USB upload |
 
-> ⚠️ **Pico W:** DO NOT select "2MB (No FS)" — OTA will fail without filesystem space!
+> ⚠️ **Pico W / Pico 2 W:** Do not select a `No FS` flash option — OTA will fail without filesystem space.
 
 ---
 
@@ -206,6 +208,14 @@ For HTTP Pull OTA, Web Browser Upload, and GitHub Releases, you need to generate
 5. ✅ IDE compiles and creates `.bin` file in your sketch folder
 6. 📁 Find it at: `<sketch_folder>/<sketch_name>.ino.bin`
 
+**Pico 2 W:**
+1. Open your sketch in Arduino IDE
+2. Select **`Tools → Board → Raspberry Pi RP2040 Boards → Raspberry Pi Pico 2W`**
+3. Select **`Tools → Flash Size → 4MB (Sketch: 2MB, FS: 2MB)`**
+4. Go to **`Sketch → Export Compiled Binary`** (or press `Ctrl+Alt+S` / `Cmd+Alt+S`)
+5. ✅ IDE compiles and creates `.bin` file in your sketch folder
+6. 📁 Find it at: `<sketch_folder>/<sketch_name>.ino.bin`
+
 **ESP32:**
 1. Select **`Tools → Board → ESP32 Arduino → <your ESP32 board>`**
 2. Go to **`Sketch → Export Compiled Binary`** (or press `Ctrl+Alt+S` / `Cmd+Alt+S`)
@@ -229,6 +239,15 @@ arduino-cli compile --fqbn rp2040:rp2040:rpipicow \
 ```
 
 Output: `MyProject/build/rp2040.rp2040.rpipicow/MyProject.ino.bin`
+
+**Pico 2 W:**
+```bash
+arduino-cli compile --fqbn rp2040:rp2040:rpipico2w \
+  --export-binaries \
+  MyProject/
+```
+
+Output: `MyProject/build/rp2040.rp2040.rpipico2w/MyProject.ino.bin`
 
 **ESP32:**
 ```bash
@@ -260,7 +279,7 @@ Output: `MyProject/build/esp32.esp32.esp32/MyProject.ino.bin`
 - 💡 Rename `.bin` files with version numbers: `firmware-v1.2.0.bin`
 - 💡 For GitHub, use consistent naming: `firmware-pico.bin`, `firmware-esp32.bin`
 - 💡 Test `.bin` files on a spare device before production deployment
-- ⚠️ **Pico W:** `.bin` file MUST be compiled with same Flash Size settings (include FS partition)
+- ⚠️ **Pico W / Pico 2 W:** `.bin` file MUST be compiled with the same board and a Flash Size setting that includes the FS partition
 - ⚠️ **ESP32:** `.bin` file must match your board type (ESP32, ESP32-S2, ESP32-C3, etc.)
 
 ---
@@ -580,7 +599,7 @@ void loop() {
 
 | Problem | Solution |
 |---------|----------|
-| ❌ `ERR: No Filesystem` (Pico W) | Re-select Flash Size with FS partition (e.g., "2MB Sketch + 1MB FS") and re-upload via USB |
+| ❌ `ERR: No Filesystem` (Pico W / Pico 2 W) | Re-select a Flash Size with an FS partition (e.g., `2MB Sketch + 1MB FS` for Pico W or `4MB Sketch + 2MB FS` for Pico 2 W) and re-upload via USB |
 | ❌ Device hangs at "Connecting WiFi..." | Use `otaSetWifiTimeout(15000)` and `otaSetupWithTimeout()` for graceful timeout |
 | ❌ Filesystem data lost after OTA | Call `otaSetFsAutoFormat(false)` before `otaSetup()` to prevent auto-format |
 
